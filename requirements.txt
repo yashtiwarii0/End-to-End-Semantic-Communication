@@ -1,0 +1,6 @@
+spacy
+networks
+matplotlib
+pandas
+numpy
+huggingface_hub
