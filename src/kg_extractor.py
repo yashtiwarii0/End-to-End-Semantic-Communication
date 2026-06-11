@@ -41,7 +41,20 @@ def extract_triples(sentence):
 
         elif token.dep_ in ("dobj", "obj", "attr","npadvmod"):
             obj = clean_phrase(token.subtree)
+    
+    # Fallback subject detection
 
+    if subject is None:
+
+        first_token = doc[0]
+        if first_token.text.lower() in ("the", "a", "an"):
+            
+            for token in doc:
+                if token.pos_ in ("PROPN", "NOUN"):
+                    subject = token.text
+                    break
+        else:
+            subject = first_token.text
     # Main triple
     if subject and relation and obj:
         triples.append((subject, relation, obj))

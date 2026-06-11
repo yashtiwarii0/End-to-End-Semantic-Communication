@@ -24,11 +24,14 @@ def encode_text(text):
         truncation=True
     )
 
-    outputs = model.encoder(
+    encoder_outputs = model.encoder(
         input_ids=inputs.input_ids
     )
-    
-    #print(inputs.input_ids.shape)
-    #print(outputs.last_hidden_state.shape)
 
-    return outputs.last_hidden_state
+    #print(inputs.input_ids.shape)
+    #print(encoder_outputs.last_hidden_state.shape)
+
+    return {
+        "input_ids": inputs.input_ids,
+        "encoder_outputs": encoder_outputs
+    }
