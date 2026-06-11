@@ -4,6 +4,7 @@ from encoder import triples_to_text, encode_text
 from similarity import calculate_similarity
 import csv
 from channel import add_awgn_noise
+from decoder import decode_text
 THRESHOLD = 3.85
 def load_sentences(filepath):
 
@@ -95,6 +96,9 @@ with open("../results.csv", "w", newline="", encoding="utf-8") as csvfile:
             original_embedding,
             snr_db
         )
+        decoded_text = decode_text(
+        noisy_embedding
+        )
         print("\nSNR:")
         print(f"{snr_db} dB")
 
@@ -104,7 +108,8 @@ with open("../results.csv", "w", newline="", encoding="utf-8") as csvfile:
         print("\nNoisy Shape:")
         print(noisy_embedding.shape)
         print("\n" + "=" * 60)
-
+        print("\nDecoded Text:")
+        print(decoded_text)
         print("Sentence:")
         print(sentence)
 
