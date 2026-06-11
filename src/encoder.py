@@ -27,5 +27,8 @@ def encode_text(text):
     outputs = model.encoder(
         input_ids=inputs.input_ids
     )
+    
+    #print(inputs.input_ids.shape)
+    #print(outputs.last_hidden_state.shape)
 
     return outputs.last_hidden_state
