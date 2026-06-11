@@ -1,5 +1,3 @@
-# src/kg_extractor.py
-
 import spacy
 
 # Load SpaCy model
@@ -8,7 +6,7 @@ nlp = spacy.load("en_core_web_sm")
 
 def clean_phrase(tokens):
     """
-    Remove unnecessary words like:
+    Remove unnecessary words:
     a, an, the
     """
 
@@ -26,26 +24,43 @@ def clean_phrase(tokens):
 def extract_triples(sentence):
 
     doc = nlp(sentence)
-
     subject = None
     relation = None
     obj = None
 
+    triples = []
+
+    # First pass: find subject, main verb, direct object
     for token in doc:
 
-        # Subject
         if token.dep_ == "nsubj":
             subject = clean_phrase(token.subtree)
 
-        # Main verb
         elif token.dep_ == "ROOT":
             relation = token.text
 
-        # Direct object
-        elif token.dep_ == "dobj":
+        elif token.dep_ in ("dobj", "obj", "attr","npadvmod"):
             obj = clean_phrase(token.subtree)
 
+    # Main triple
     if subject and relation and obj:
-        return [(subject, relation, obj)]
+        triples.append((subject, relation, obj))
 
-    return []
+    # Second pass: find preposition relations
+    for token in doc:
+
+        if token.dep_ == "prep":
+
+            prep_relation = token.text
+
+            for child in token.children:
+
+                if child.dep_ == "pobj":
+
+                    prep_object = clean_phrase(child.subtree)
+
+                    triples.append(
+                        (subject, prep_relation, prep_object)
+                    )
+
+    return triples

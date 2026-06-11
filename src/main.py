@@ -18,8 +18,13 @@ else:
 
     triples = extract_triples(sentence)
 
-    print("Structured Sentence")
-    print("Triples:", triples)
+    if triples:
+        print("Structured Sentence")
+        print("Triples:", triples)
+
+    else:
+        print("No valid KG triples found")
+        print("Treating as unstructured sentence")
 
 
 
