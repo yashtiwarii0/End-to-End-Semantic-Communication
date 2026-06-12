@@ -1,11 +1,14 @@
 from entropy_checker import calculate_entropy
 from kg_extractor import extract_triples
-from encoder import triples_to_text, encode_text
+from encoder_t5 import triples_to_text, encode_text
 from similarity import calculate_similarity
 import csv
-from channel import add_awgn_noise
-from decoder import decode_text
+from channel import transmit_signal
+from decoder_t5 import decode_text
+from bert_refiner import refine_text
+
 THRESHOLD = 3.85
+
 def load_sentences(filepath):
 
     with open(filepath, "r", encoding="utf-8") as file:
@@ -32,7 +35,11 @@ with open("../results.csv", "w", newline="", encoding="utf-8") as csvfile:
         "Entropy",
         "Triples",
         "KG_Text",
-        "Similarity"
+        "Decoded_Text",
+        "Refined_Text",
+        "KG_Similarity",
+        "Decoder_Similarity",
+        "Refined_Similarity"
     ])
 
     for sentence in sentences:
@@ -73,18 +80,11 @@ with open("../results.csv", "w", newline="", encoding="utf-8") as csvfile:
 
         text = triples_to_text(triples)
 
-        similarity = calculate_similarity(
+        kg_similarity = calculate_similarity(
             sentence,
             text
         )
-
-        writer.writerow([
-        sentence,
-        round(entropy, 4),
-        str(triples),
-        text,
-        round(similarity, 4)
-        ])
+     
         encoded_data = encode_text(text)
         original_embedding = (
         encoded_data["encoder_outputs"]
@@ -92,24 +92,43 @@ with open("../results.csv", "w", newline="", encoding="utf-8") as csvfile:
         )
 
         snr_db = 2
-        noisy_embedding = add_awgn_noise(
+        noisy_embedding = transmit_signal(
             original_embedding,
             snr_db
         )
+
         decoded_text = decode_text(
         noisy_embedding
         )
-        print("\nSNR:")
-        print(f"{snr_db} dB")
 
-        print("\nOriginal Shape:")
-        print(original_embedding.shape)
+        decoder_similarity = calculate_similarity(
+        sentence,
+        decoded_text
+        )
+        
+        refined_output = refine_text(
+        decoded_text
+        )
 
-        print("\nNoisy Shape:")
-        print(noisy_embedding.shape)
+        refined_similarity = calculate_similarity(
+        sentence,
+        refined_output["text"]
+        )
+
+        writer.writerow([
+            sentence,
+            round(entropy, 4),
+            str(triples),
+            text,
+            decoded_text,
+            refined_output["text"],
+            round(kg_similarity, 4),
+            round(decoder_similarity, 4),
+            round(refined_similarity, 4)
+            ])
+
         print("\n" + "=" * 60)
-        print("\nDecoded Text:")
-        print(decoded_text)
+
         print("Sentence:")
         print(sentence)
 
@@ -122,12 +141,33 @@ with open("../results.csv", "w", newline="", encoding="utf-8") as csvfile:
         print("\nKG Text:")
         print(text)
 
-        print("\nSimilarity:")
-        print(round(similarity, 4))
+        print("\nSNR:")
+        print(f"{snr_db} dB")
+
+        print("\nOriginal Shape:")
+        print(original_embedding.shape)
+
+        print("\nNoisy Shape:")
+        print(noisy_embedding.shape)
+        
+        print("\nDecoded Text:")
+        print(decoded_text)
+
+        print("\nRefined Output:")
+        print(refined_output)
+
+        print("\nKG Similarity:")
+        print(round(kg_similarity, 4))
+
+        print("\nDecoder Similarity:")
+        print(round(decoder_similarity, 4))
+        
+        print("\nRefined Similarity:")
+        print(round(refined_similarity, 4))
 
         print("\nEncoder Shape:")
         print(
             encoded_data["encoder_outputs"]
-            .last_hidden_state
+            .last_hidden_state.shape
         )
 
